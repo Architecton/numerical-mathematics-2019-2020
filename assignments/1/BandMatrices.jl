@@ -1,5 +1,10 @@
+module BandMatrices
+
 import Base:*,\,convert
 import LinearAlgebra:dot,lu
+using Printf
+
+export BandMatrix, UpperBandMatrix, LowerBandMatrix, lu, *, \
 
 
 struct BandMatrix{T} <: AbstractArray{T, 2}
@@ -267,15 +272,18 @@ end
 
 
 function *(M::BandMatrix, v::Vector)
-    # TODO bounds check
-    #
 
-    # Allocate vector for storing results.
-    res = Vector{}(undef, length(v))
-    
     # Inspect center diagonal to get matrix dimensions.
     center_idx = div(length(M.diagonals), 2) + 1
     mat_dim = length(M.diagonals[center_idx])
+
+    # Dimensions match test.
+    if length(v) != mat_dim
+        throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", (mat_dim, mat_dim), length(v))))
+    end
+
+    # Allocate vector for storing results.
+    res = Vector{}(undef, length(v))
     
     # Compute start index offset and ending index.
     offset = -div(length(M.diagonals), 2) + 1
@@ -283,7 +291,7 @@ function *(M::BandMatrix, v::Vector)
      
     # Compute product by shifting indices over explicitly stored elements.
     for idx = 1:length(v)
-        res[idx] = LinearAlgebra.dot(M[idx, max(offset, 1):min(end_idx, mat_dim)], v[max(offset, 1):min(end_idx, mat_dim)]) 
+        res[idx] = dot(M[idx, max(offset, 1):min(end_idx, mat_dim)], v[max(offset, 1):min(end_idx, mat_dim)]) 
         offset += 1
         end_idx += 1
     end
@@ -295,6 +303,11 @@ end
 
 function *(M::UpperBandMatrix, v::Vector)
     
+    # Dimensions match test.
+    if length(v) != length(M.diagonals[1])
+        throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", (length(M.diagonals[1]), length(M.diagonals[1])), length(v))))
+    end
+    
     # Allocate vector for storing results.
     res = Vector{}(undef, length(v))
 
@@ -304,7 +317,7 @@ function *(M::UpperBandMatrix, v::Vector)
 
     # Compute product by shifting indices over explicitly stored elements.
     for idx = 1:length(v)
-        res[idx] = LinearAlgebra.dot(M[idx, offset:min(end_idx, length(M.diagonals[1]))], v[offset:min(end_idx, length(M.diagonals[1]))]) 
+        res[idx] = dot(M[idx, offset:min(end_idx, length(M.diagonals[1]))], v[offset:min(end_idx, length(M.diagonals[1]))]) 
         offset += 1
         end_idx += 1
     end
@@ -316,6 +329,11 @@ end
 
 function *(M::LowerBandMatrix, v::Vector)
     
+    # Dimensions match test.
+    if length(v) != length(M.diagonals[end])
+        throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", (length(M.diagonals[end]), length(M.diagonals[end])), length(v))))
+    end
+    
     # Allocate vector for storing results.
     res = Vector{}(undef, length(v))
 
@@ -324,7 +342,7 @@ function *(M::LowerBandMatrix, v::Vector)
 
     # Compute product by shifting indices over explicitly stored elements.
     for idx = 1:length(v)
-        res[idx] = LinearAlgebra.dot(M[idx, max(offset, 1):idx], v[max(offset, 1):idx]) 
+        res[idx] = dot(M[idx, max(offset, 1):idx], v[max(offset, 1):idx]) 
         offset += 1
     end
 
@@ -338,10 +356,12 @@ function convert(::Type{BandMatrix{T}}, M::BandMatrix) where {T}
     return res
 end
 
+
 function convert(::Type{UpperBandMatrix{T}}, M::UpperBandMatrix) where {T}
     res = UpperBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
+
 
 function convert(::Type{LowerBandMatrix{T}}, M::LowerBandMatrix) where {T}
     res = LowerBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
@@ -349,23 +369,10 @@ function convert(::Type{LowerBandMatrix{T}}, M::LowerBandMatrix) where {T}
 end
 
 
-function \(M::BandMatrix, v::Vector)
-    
-end
-
-
-function \(M::UpperBandMatrix, v::Vector)
-
-end
-
-
-function \(M::LowerBandMatrix, v::Vector)
-
-end
-
 function lu(M::BandMatrix)
     
-    if typeof(M).parameters[1] == Int64
+    # If matrix values of signed integer type, convert to Float.
+    if typeof(M).parameters[1] in subtypes(Signed)
         M_el = convert(BandMatrix{Float64}, M)
     else
         M_el = M  
@@ -374,20 +381,25 @@ function lu(M::BandMatrix)
     # Inspect center diagonal to get matrix dimensions.
     center_idx = div(length(M_el.diagonals), 2) + 1
     mat_dim = length(M_el.diagonals[center_idx])
+
+    # Get explicitly stored columns range for elimination.
     col_range = div(length(M.diagonals), 2) + 1
 
     # Compute start index offset and ending index.
     offset = -div(length(M.diagonals), 2) + 1
     end_idx = div(length(M.diagonals), 2) + 1
     
+    # Perform elimination.
     for idx_col = 1:mat_dim-1
         
+        # perform diagonal dominance check for next row.
         if sum(M[idx_col, max(offset, 1):min(end_idx, mat_dim)]) - M[idx_col, idx_col] > M[idx_col, idx_col]
-            # TODO error in dominance.
+            throw(DomainError(M, "Matrix not diagonally dominant"))
         end
         offset += 1
         end_idx += 1
-
+        
+        # Eliminate elements in column below main diagonal. Build elimination matrix in-place.
         piv = M_el[idx_col, idx_col]
         for idx_row = idx_col+1:min(idx_col+div(length(M.diagonals), 2), mat_dim)
             div = -M_el[idx_row, idx_col]/piv
@@ -396,11 +408,12 @@ function lu(M::BandMatrix)
         end
     end
 
-    
+    # perform diagonal dominance check for last row.
     if sum(M[mat_dim, max(offset, 1):min(end_idx, mat_dim)]) - M[end, end] > M[end, end]
-       # Error, not diagonally dominant. 
+       throw(DomainError(M, "Matrix not diagonally dominant"))
     end
 
+    # Get L and U matrices and return them.
     l = LowerBandMatrix{Float64}(vcat(M_el.diagonals[1:div(length(M_el.diagonals), 2)], [ones(mat_dim)]))
     u = UpperBandMatrix{Float64}(M_el.diagonals[center_idx:end])
     return l, u
@@ -409,34 +422,48 @@ end
 
 function lu(M::UpperBandMatrix)
 
+    # If matrix values of signed integer type, convert to Float.
+    if typeof(M).parameters[1] in subtypes(Signed)
+        M_el = convert(LowerBandMatrix{Float64}, M)
+    else
+        M_el = M  
+    end
+
     # Compute start index offset and ending index.
     offset = 1
-    end_idx = length(M.diagonals)
+    end_idx = length(M_el.diagonals)
 
     # Compute product by shifting indices over explicitly stored elements.
-    for idx = 1:length(M.diagonals[1])
-        if sum(M[idx, offset:min(end_idx, length(M.diagonals[1]))]) - M[idx, idx] > M[idx, idx]
-            # TODO error in dominance.
+    for idx = 1:length(M_el.diagonals[1])
+
+        # perform diagonal dominance check for next row.
+        if sum(M_el[idx, offset:min(end_idx, length(M_el.diagonals[1]))]) - M_el[idx, idx] > M_el[idx, idx]
+            throw(DomainError(M, "Matrix not diagonally dominant"))
         end
         offset += 1
         end_idx += 1
     end
 
-    l = BandMatrix{Float64}([ones(length(M.diagonals[1]))])
-    u = convert(UpperBandMatrix{Float64}, M)
+    # Get L and U matrices and return them.
+    l = BandMatrix{Float64}([ones(length(M_el.diagonals[1]))])
+    u = convert(UpperBandMatrix{Float64}, M_el)
     return l, u
 end
 
 
 function lu(M::LowerBandMatrix)
 
-    if typeof(M).parameters[1] == Int64
+    # If matrix values of signed integer type, convert to Float.
+    if typeof(M).parameters[1] in subtypes(Signed)
         M_el = convert(LowerBandMatrix{Float64}, M)
     else
         M_el = M  
     end
     
+    # Inspect last diagonal to get matrix dimensions.
     mat_dim = length(M_el.diagonals[end])
+    
+    # Get explicitly stored columns range for elimination.
     col_range = div(length(M.diagonals), 2) + 1
 
     # Compute start index offset.
@@ -444,11 +471,13 @@ function lu(M::LowerBandMatrix)
     
     for idx_col = 1:mat_dim-1
 
+        # perform diagonal dominance check for next row.
         if sum(M[idx_col, max(offset, 1):idx_col]) - M[idx_col, idx_col] > M[idx_col, idx_col]
-            # TODO error in dominance.
+            throw(DomainError(M, "Matrix not diagonally dominant"))
         end
         offset += 1
 
+        # Eliminate elements in column below main diagonal. Build elimination matrix in-place.
         piv = M_el[idx_col, idx_col]
         for idx_row = idx_col+1:min(idx_col+length(M.diagonals)-1, mat_dim)
             div = -M_el[idx_row, idx_col]/piv
@@ -456,23 +485,66 @@ function lu(M::LowerBandMatrix)
         end
     end
 
+    # perform diagonal dominance check for last row.
     if sum(M[mat_dim, max(offset, 1):mat_dim]) - M[end, end] > M[end, end]
-        # TODO error in dominance.
+        throw(DomainError(M, "Matrix not diagonally dominant"))
     end
-
+    
+    # Get L and U matrices and return them.
     l = LowerBandMatrix{Float64}(vcat(M_el.diagonals[1:end-1], [ones(mat_dim)]))
     u = UpperBandMatrix{Float64}([M_el.diagonals[end]])
     return l, u
 end
 
 
-bm = BandMatrix{Int64}([[1, 2], [1, 2, 3], [3, 2]])
-ubm = UpperBandMatrix{Int64}([[1, 2, 3], [3, 2]])
-lbm = LowerBandMatrix{Int64}([[1, 2], [1, 2, 3]])
+function \(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
+    
+    # Dimensions match test.
+    if length(b) != maximum(map(length, M.diagonals))
+        throw(DimensionMismatch(@sprintf("B has leading dimension %d, but needs %d", length(b), maximum(map(length, M.diagonals)))))
+    end
+    
+    # If vector values of signed integer type, convert to Float.
+    if typeof(b).parameters[1] in subtypes(Signed)
+        b = convert(Array{Float64}, b)
+    end
+    
+    # Perform LU decomposition.
+    l, u = lu(M)    
 
-bm2 = BandMatrix{Int64}([[1, 2, 3, 4], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6], [1, 2, 3, 3, 4], [1, 2, 3, 4]])
-lbm2 = LowerBandMatrix{Int64}([[7, 8, 9], [4, 5, 6, 7], [1, 2, 2, 4, 5]])
-bm3 = BandMatrix{Int64}([[4, 5, 8], [3, 4, 6, 7], [1, 3, 5, 6, 7], [2, 5, 7, 8], [7, 8, 9]])
-bm4 = BandMatrix{Int64}([[2, 3, 4], [1, 1, 1, 1], [3, 2, 3]])
-lbm5 = LowerBandMatrix{Int64}([[3, 3, 3], [2, 2, 2, 2], [1, 2, 3, 4, 5]])
+    
+    ### Solve Ly = b for y. ###
+    
+    # Initialize y vector.
+    y = copy(b)
 
+    # Set columns range for row when performing substitutions.
+    col_range = length(l.diagonals) - 1
+
+    # Perform forward substitions to compute y vector.
+    y[1] = y[1]/l[1, 1]
+    for idx = 2:length(y)
+        start_idx = max(1, idx-col_range)
+        coeffs = l[idx, start_idx:idx-1]
+        y[idx] = (y[idx] + dot(-coeffs, y[start_idx:idx-1]))/l[idx, idx]
+    end
+
+
+    ### Solve Ux = y for x. ###
+    
+    # Initialize x vector.
+    x = copy(y)
+
+    # Perform backward substitions to compute x vector.
+    x[end] = x[end]/u[end, end]
+    for idx = length(x)-1:-1:1
+       end_idx = min(length(u.diagonals[1]), idx+col_range)
+       coeffs = u[idx, idx+1:end_idx]
+       x[idx] = (x[idx] + dot(-coeffs, x[idx+1:end_idx]))/u[idx, idx]
+    end
+    
+    # Return solution.
+    return x
+end
+
+end
