@@ -1,12 +1,29 @@
 module BandMatrices
 
-import Base:*,\,convert
+import Base:*,\,convert, copy
 import LinearAlgebra:dot,lu
 using Printf
+using InteractiveUtils  # Prevent subtypes not defined error.
 
 export BandMatrix, UpperBandMatrix, LowerBandMatrix, lu, *, \
 
 
+"""
+    BandMatrix{T} <: AbstractArray{T, 2}
+
+Type representing a center-band band matrix where only the specified diagonals are explicitly stored.
+The matrix is initialized by specifying the band diagonals as an array of arrays.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+```
+"""
 struct BandMatrix{T} <: AbstractArray{T, 2}
     
     # Band diagonals that are explicitly stored by the matrix
@@ -38,6 +55,22 @@ struct BandMatrix{T} <: AbstractArray{T, 2}
 end
 
 
+"""
+    UpperBandMatrix{T} <: AbstractArray{T, 2}
+
+Type representing a upper-band band matrix where only the specified diagonals are explicitly stored.
+The matrix is initialized by specifying the band diagonals as an array of arrays.
+
+# Examples
+```julia-repl
+julia> M = UpperBandMatrix{Int64}([[1, 5, 3, 2], [8, 4, 6], [2, 2]])
+4×4 UpperBandMatrix{Int64}:
+ 1  8  2  0
+ 0  5  4  2
+ 0  0  3  6
+ 0  0  0  2
+```
+"""
 struct UpperBandMatrix{T} <: AbstractArray{T, 2}
     
     # Band diagonals that are explicitly stored by the matrix
@@ -66,6 +99,22 @@ struct UpperBandMatrix{T} <: AbstractArray{T, 2}
 end
 
 
+"""
+    LowerBandMatrix{T} <: AbstractArray{T, 2}
+
+Type representing a lower-band band matrix where only the specified diagonals are explicitly stored.
+The matrix is initialized by specifying the band diagonals as an array of arrays.
+
+# Examples
+```julia-repl
+julia> M = LowerBandMatrix{Int64}([[2, 1], [3, 3, 2], [4, 5, 5, 3]])
+4×4 LowerBandMatrix{Int64}:
+ 4  0  0  0
+ 3  5  0  0
+ 2  3  5  0
+ 0  1  2  3
+```
+"""
 struct LowerBandMatrix{T} <: AbstractArray{T, 2}
     
     # Band diagonals that are explicitly stored by the matrix
@@ -92,7 +141,13 @@ struct LowerBandMatrix{T} <: AbstractArray{T, 2}
     end
 end
 
+# TODO
+function Base.copy(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
+    return typeof(M)(deepcopy(M.diagonals))
+end
 
+
+# TODO
 function Base.size(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
 
     # Get size by inspecting main diagonal length.
@@ -109,6 +164,7 @@ function Base.size(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
 end
 
 
+# TODO
 function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Int)
 
     # If linear index out of bounds, throw error.
@@ -159,6 +215,7 @@ function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, i
 end
 
 
+# TODO
 function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Vararg{Int, 2})
         
     # Get Cartesian index.
@@ -196,6 +253,7 @@ function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, i
 end
 
 
+# TODO
 function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Int)
 
 
@@ -233,6 +291,8 @@ function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, 
     end
 end 
 
+
+# TODO
 function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Vararg{Int, 2})
     
     # Get Cartesian index.
@@ -271,6 +331,7 @@ function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, 
 end
 
 
+# TODO
 function *(M::BandMatrix, v::Vector)
 
     # Inspect center diagonal to get matrix dimensions.
@@ -301,6 +362,7 @@ function *(M::BandMatrix, v::Vector)
 end
 
 
+# TODO
 function *(M::UpperBandMatrix, v::Vector)
     
     # Dimensions match test.
@@ -327,6 +389,7 @@ function *(M::UpperBandMatrix, v::Vector)
 end
 
 
+# TODO
 function *(M::LowerBandMatrix, v::Vector)
     
     # Dimensions match test.
@@ -351,31 +414,35 @@ function *(M::LowerBandMatrix, v::Vector)
 end
 
 
+# TODO
 function convert(::Type{BandMatrix{T}}, M::BandMatrix) where {T}
     res = BandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
+# TODO
 function convert(::Type{UpperBandMatrix{T}}, M::UpperBandMatrix) where {T}
     res = UpperBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
+# TODO
 function convert(::Type{LowerBandMatrix{T}}, M::LowerBandMatrix) where {T}
     res = LowerBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
+# TODO
 function lu(M::BandMatrix)
     
     # If matrix values of signed integer type, convert to Float.
     if typeof(M).parameters[1] in subtypes(Signed)
         M_el = convert(BandMatrix{Float64}, M)
     else
-        M_el = M  
+        M_el = copy(M)
     end
     
     # Inspect center diagonal to get matrix dimensions.
@@ -420,13 +487,14 @@ function lu(M::BandMatrix)
 end
 
 
+# TODO
 function lu(M::UpperBandMatrix)
 
     # If matrix values of signed integer type, convert to Float.
     if typeof(M).parameters[1] in subtypes(Signed)
-        M_el = convert(LowerBandMatrix{Float64}, M)
+        M_el = convert(UpperBandMatrix{Float64}, M)
     else
-        M_el = M  
+        M_el = copy(M)
     end
 
     # Compute start index offset and ending index.
@@ -446,18 +514,19 @@ function lu(M::UpperBandMatrix)
 
     # Get L and U matrices and return them.
     l = BandMatrix{Float64}([ones(length(M_el.diagonals[1]))])
-    u = convert(UpperBandMatrix{Float64}, M_el)
+    u = M_el
     return l, u
 end
 
 
+# TODO
 function lu(M::LowerBandMatrix)
 
     # If matrix values of signed integer type, convert to Float.
     if typeof(M).parameters[1] in subtypes(Signed)
         M_el = convert(LowerBandMatrix{Float64}, M)
     else
-        M_el = M  
+        M_el = copy(M)
     end
     
     # Inspect last diagonal to get matrix dimensions.
@@ -497,6 +566,7 @@ function lu(M::LowerBandMatrix)
 end
 
 
+# TODO
 function \(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
     
     # Dimensions match test.
@@ -519,12 +589,12 @@ function \(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
     y = copy(b)
 
     # Set columns range for row when performing substitutions.
-    col_range = length(l.diagonals) - 1
+    col_range1 = length(l.diagonals) - 1
 
     # Perform forward substitions to compute y vector.
     y[1] = y[1]/l[1, 1]
     for idx = 2:length(y)
-        start_idx = max(1, idx-col_range)
+        start_idx = max(1, idx-col_range1)
         coeffs = l[idx, start_idx:idx-1]
         y[idx] = (y[idx] + dot(-coeffs, y[start_idx:idx-1]))/l[idx, idx]
     end
@@ -534,13 +604,16 @@ function \(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
     
     # Initialize x vector.
     x = copy(y)
+    
+    # Set columns range for row when performing substitutions.
+    col_range2 = length(u.diagonals) - 1
 
     # Perform backward substitions to compute x vector.
     x[end] = x[end]/u[end, end]
     for idx = length(x)-1:-1:1
-       end_idx = min(length(u.diagonals[1]), idx+col_range)
-       coeffs = u[idx, idx+1:end_idx]
-       x[idx] = (x[idx] + dot(-coeffs, x[idx+1:end_idx]))/u[idx, idx]
+        end_idx = min(length(u.diagonals[1]), idx+col_range2)
+        coeffs = u[idx, idx+1:end_idx]
+        x[idx] = (x[idx] + dot(-coeffs, x[idx+1:end_idx]))/u[idx, idx]
     end
     
     # Return solution.
