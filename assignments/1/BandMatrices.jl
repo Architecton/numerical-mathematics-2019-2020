@@ -141,13 +141,35 @@ struct LowerBandMatrix{T} <: AbstractArray{T, 2}
     end
 end
 
-# TODO
+
+"""
+    Base.copy(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
+
+Make a deep copy of a band matrix type instance.
+"""
 function Base.copy(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
     return typeof(M)(deepcopy(M.diagonals))
 end
 
 
-# TODO
+"""
+    Base.size(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
+
+Get size of matrix represented by band matrix type.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> size(M)
+(4, 4)
+```
+"""
 function Base.size(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
 
     # Get size by inspecting main diagonal length.
@@ -164,7 +186,24 @@ function Base.size(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix})
 end
 
 
-# TODO
+"""
+    Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Int)
+
+Perform linear indexing of matrix represented by band matrix type instance.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> M[5]
+8
+```
+"""
 function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Int)
 
     # If linear index out of bounds, throw error.
@@ -215,7 +254,24 @@ function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, i
 end
 
 
-# TODO
+"""
+    Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Vararg{Int, 2})
+
+Perform cartesian indexing of matrix represented by band matrix type instance.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> M[3, 2]
+2
+```
+"""
 function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, idx::Vararg{Int, 2})
         
     # Get Cartesian index.
@@ -253,7 +309,31 @@ function Base.getindex(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, i
 end
 
 
-# TODO
+"""
+    Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Int)
+
+Set element at specified linear index in band matrix type instance.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> M[5] = 2
+2
+
+julia> display(M)
+4×4 BandMatrix{Int64}:
+ 1  2  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+```
+"""
 function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Int)
 
 
@@ -292,7 +372,31 @@ function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, 
 end 
 
 
-# TODO
+"""
+    Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Vararg{Int, 2})
+
+Set element at specified cartesian index in band matrix type instance.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> M[3, 2] = 9
+9
+
+julia> display(M)
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  9  3  6
+ 0  0  7  2
+```
+"""
 function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, val, idx::Vararg{Int, 2})
     
     # Get Cartesian index.
@@ -331,7 +435,35 @@ function Base.setindex!(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, 
 end
 
 
-# TODO
+"""
+    *(M::BandMatrix, v::Vector)
+    
+Perform multiplication of center band matrix type instance with vector.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 7], [1, 5, 3, 2], [8, 4, 6]])
+4×4 BandMatrix{Int64}:
+ 1  8  0  0
+ 3  5  4  0
+ 0  2  3  6
+ 0  0  7  2
+
+julia> v = [2, 1, 1, 2]
+4-element Array{Int64,1}:
+ 2
+ 1
+ 1
+ 2
+
+julia> M*v
+4-element Array{Any,1}:
+ 10
+ 15
+ 17
+ 11
+```
+"""
 function *(M::BandMatrix, v::Vector)
 
     # Inspect center diagonal to get matrix dimensions.
@@ -361,8 +493,36 @@ function *(M::BandMatrix, v::Vector)
     return res
 end
 
+# TODO: result of multiplication Any -> type of matrix.
+"""
+    *(M::UpperBandMatrix, v::Vector)
+    
+Perform multiplication of upper band matrix type instance with vector.
 
-# TODO
+# Examples
+```julia-repl
+julia> M = UpperBandMatrix{Int64}([[1, 5, 3, 2], [8, 4, 6], [2, 1]])
+4×4 UpperBandMatrix{Int64}:
+ 1  8  2  0
+ 0  5  4  1
+ 0  0  3  6
+ 0  0  0  2
+
+julia> v = [2, 1, 2, 1]
+4-element Array{Int64,1}:
+ 2
+ 1
+ 2
+ 1
+
+julia> M*v
+4-element Array{Any,1}:
+ 14
+ 14
+ 12
+  2
+```
+"""
 function *(M::UpperBandMatrix, v::Vector)
     
     # Dimensions match test.
@@ -389,7 +549,35 @@ function *(M::UpperBandMatrix, v::Vector)
 end
 
 
-# TODO
+"""
+    *(M::LowerBandMatrix, v::Vector)
+    
+Perform multiplication of lower band matrix type instance with vector.
+
+# Examples
+```julia-repl
+julia> M = LowerBandMatrix{Int64}([[2, 1], [3, 3, 1], [1, 5, 3, 2]])
+4×4 LowerBandMatrix{Int64}:
+ 1  0  0  0
+ 3  5  0  0
+ 2  3  3  0
+ 0  1  1  2
+
+julia> v = [1, 2, 1, 3]
+4-element Array{Int64,1}:
+ 1
+ 2
+ 1
+ 3
+
+julia> M*v
+4-element Array{Any,1}:
+  1
+ 13
+ 11
+  9
+```
+"""
 function *(M::LowerBandMatrix, v::Vector)
     
     # Dimensions match test.
@@ -414,28 +602,79 @@ function *(M::LowerBandMatrix, v::Vector)
 end
 
 
-# TODO
+"""
+    convert(::Type{BandMatrix{T}}, M::BandMatrix) where {T}
+
+Convert type of values of matrix represented by center band matrix type.
+"""
 function convert(::Type{BandMatrix{T}}, M::BandMatrix) where {T}
     res = BandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
-# TODO
+"""
+    convert(::Type{UpperBandMatrix{T}}, M::UpperBandMatrix) where {T}
+
+Convert type of values of matrix represented by center band matrix type.
+"""
 function convert(::Type{UpperBandMatrix{T}}, M::UpperBandMatrix) where {T}
     res = UpperBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
-# TODO
+"""
+    convert(::Type{LowerBandMatrix{T}}, M::LowerBandMatrix) where {T}
+
+Convert type of values of matrix represented by center band matrix type.
+"""
 function convert(::Type{LowerBandMatrix{T}}, M::LowerBandMatrix) where {T}
     res = LowerBandMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
     return res
 end
 
 
-# TODO
+"""
+    function lu(M::BandMatrix)
+
+Perform LU decomposition of center-band matrix type instance and return L and U matrices
+(lower-band and upper-band respectively). The matrix must be diagonally dominant to ensure numerical
+stability of the gaussian elimination process.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[3, 2, 1], [5, 5, 7, 8], [1, 1, 3]])
+4×4 BandMatrix{Int64}:
+ 5  1  0  0
+ 3  5  1  0
+ 0  2  7  3
+ 0  0  1  8
+
+julia> l, u = lu(M);
+
+julia> display(l)
+4×4 LowerBandMatrix{Float64}:
+ 1.0  0         0         0
+ 0.6  1.0       0         0
+ 0    0.454545  1.0       0
+ 0    0         0.152778  1.0
+
+julia> display(l)
+4×4 LowerBandMatrix{Float64}:
+ 1.0  0         0         0
+ 0.6  1.0       0         0
+ 0    0.454545  1.0       0
+ 0    0         0.152778  1.0
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 5.0  1.0  0.0  0.0
+ 3.0  5.0  1.0  0.0
+ 0.0  2.0  7.0  3.0
+ 0.0  0.0  1.0  8.0
+```
+"""
 function lu(M::BandMatrix)
     
     # If matrix values of signed integer type, convert to Float.
@@ -487,7 +726,47 @@ function lu(M::BandMatrix)
 end
 
 
-# TODO
+"""
+    function lu(M::UpperBandMatrix)
+
+Perform LU decomposition of upper-band matrix type instance and return L and U matrices
+(lower-band and upper-band respectively). The matrix must be diagonally dominant to ensure numerical
+stability of the gaussian elimination process.
+
+# Examples
+```julia-repl
+julia> M = UpperBandMatrix{Int64}([[7, 5, 3, 2], [4, 3, 2], [2, 1]])
+4×4 UpperBandMatrix{Int64}:
+ 7  4  2  0
+ 0  5  3  1
+ 0  0  3  2
+ 0  0  0  2
+
+julia> l, u = lu(M);
+
+julia> display(l)
+4×4 BandMatrix{Float64}:
+ 1.0  0    0    0
+ 0    1.0  0    0
+ 0    0    1.0  0
+ 0    0    0    1.0
+
+julia> display(u)
+4×4 UpperBandMatrix{Float64}:
+ 7.0  4.0  2.0  0
+ 0    5.0  3.0  1.0
+ 0    0    3.0  2.0
+ 0    0    0    2.0
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 7.0  4.0  2.0  0.0
+ 0.0  5.0  3.0  1.0
+ 0.0  0.0  3.0  2.0
+ 0.0  0.0  0.0  2.0
+```
+"""
+# TODO center band -> center-band
 function lu(M::UpperBandMatrix)
 
     # If matrix values of signed integer type, convert to Float.
@@ -519,7 +798,46 @@ function lu(M::UpperBandMatrix)
 end
 
 
-# TODO
+"""
+    function lu(M::LowerBandMatrix)
+
+Perform LU decomposition of lower-band matrix type instance and return L and U matrices
+(lower-band and upper-band respectively). The matrix must be diagonally dominant to ensure numerical
+stability of the gaussian elimination process.
+
+# Examples
+```julia-repl
+julia> M = LowerBandMatrix{Int64}([[2, 1], [3, 2, 1], [1, 5, 6, 3]])
+4×4 LowerBandMatrix{Int64}:
+ 1  0  0  0
+ 3  5  0  0
+ 2  2  6  0
+ 0  1  1  3
+
+julia> l, u = lu(M);
+
+julia> display(l)
+4×4 LowerBandMatrix{Float64}:
+ 1.0  0    0         0
+ 3.0  1.0  0         0
+ 2.0  0.4  1.0       0
+ 0    0.2  0.166667  1.0
+
+julia> display(u)
+d4×4 UpperBandMatrix{Float64}:
+ 1.0  0    0    0
+ 0    5.0  0    0
+ 0    0    6.0  0
+ 0    0    0    3.0
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 1.0  0.0  0.0  0.0
+ 3.0  5.0  0.0  0.0
+ 2.0  2.0  6.0  0.0
+ 0.0  1.0  1.0  3.0
+```
+"""
 function lu(M::LowerBandMatrix)
 
     # If matrix values of signed integer type, convert to Float.
@@ -566,7 +884,42 @@ function lu(M::LowerBandMatrix)
 end
 
 
-# TODO
+"""
+    \\(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
+
+Solve systems of linear equations Ax = B for x where A is a band matrix.
+
+# Examples
+```julia-repl
+julia> M = BandMatrix{Int64}([[2, 2], [4, 2, 2], [7, 9, 8, 7], [4, 3, 2], [2, 1]])
+4×4 BandMatrix{Int64}:
+ 7  4  2  0
+ 4  9  3  1
+ 2  2  8  2
+ 0  2  2  7
+
+julia> b = [3, 2, 4, 2]
+4-element Array{Int64,1}:
+ 3
+ 2
+ 4
+ 2
+
+julia> x = M\b
+4-element Array{Float64,1}:
+  0.37324602432179604
+ -0.09260991580916746
+  0.3788587464920487
+  0.2039289055191768
+
+julia> M*x
+4-element Array{Any,1}:
+ 3.0
+ 2.0
+ 4.0
+ 2.0
+```
+"""
 function \(M::Union{BandMatrix, UpperBandMatrix, LowerBandMatrix}, b::Vector)
     
     # Dimensions match test.
