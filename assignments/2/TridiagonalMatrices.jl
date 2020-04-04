@@ -1,11 +1,11 @@
 module TridiagonalMatrices
 
-import Base:*,\,convert,copy,size,getindex,setindex
+import Base:*,\,convert,copy,size,getindex,setindex!
 import LinearAlgebra:dot,lu
 using Printf
-using InteractiveUtils  # Prevent subtypes not defined error.
 
 export TridiagonalMatrix, UpperTridiagonalMatrix, LowerTridiagonalMatrix
+
 
 """
     TridiagonalMatrix{T} <: AbstractArray{T, 2}
@@ -15,7 +15,7 @@ The matrix is initialized by specifying the band diagonals as an array of arrays
 
 # Examples
 ```julia-repl
-julia> M = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
 4×4 TridiagonalMatrix{Int64}:
  4  4  0  0
  1  2  7  0
@@ -46,6 +46,22 @@ struct TridiagonalMatrix{T} <: AbstractArray{T,2}
 end
 
 
+"""
+    UpperTridiagonalMatrix{T} <: AbstractArray{T,2}
+
+Type representing an upper tridiagonal matrix where only the specified diagonals are explicitly stored.
+The matrix is initialized by specifying the band diagonals as an array of arrays.
+
+# Examples
+```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+```
+"""
 struct UpperTridiagonalMatrix{T} <: AbstractArray{T,2}
 
     # Explicitly stored values on the diagonals.
@@ -68,6 +84,22 @@ struct UpperTridiagonalMatrix{T} <: AbstractArray{T,2}
 end
 
 
+"""
+    LowerTridiagonalMatrix{T} <: AbstractArray{T,2}
+
+Type representing a lower tridiagonal matrix where only the specified diagonals are explicitly stored.
+The matrix is initialized by specifying the band diagonals as an array of arrays.
+
+# Examples
+```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+```
+"""
 struct LowerTridiagonalMatrix{T} <: AbstractArray{T,2}
 
     # Explicitly stored values on the diagonals.
@@ -91,32 +123,31 @@ end
 
 
 """
-    Base.size(M::TridiagonalMatrix)::Tuple{Int64,Int64}
+    size(M::TridiagonalMatrix)::Tuple{Int64,Int64}
 
 Get size of matrix represented by tridiagonal matrix type.
-
-# Examples
-```julia-repl
-julia> M = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
-4×4 TridiagonalMatrix{Int64}:
- 4  4  0  0
- 1  2  7  0
- 0  4  3  6
- 0  0  3  4
-
-julia> size(M)
-(4, 4)
-```
 """
-function Base.size(M::TridiagonalMatrix)::Tuple{Int64,Int64}
+function size(M::TridiagonalMatrix)::Tuple{Int64,Int64}
     return (length(M.diagonals[2]), length(M.diagonals[2]))
 end
 
-function Base.size(M::UpperTridiagonalMatrix)::Tuple{Int64,Int64}
+
+"""
+    size(M::UpperTridiagonalMatrix)::Tuple{Int64,Int64}
+
+Get size of matrix represented by upper tridiagonal matrix type.
+"""
+function size(M::UpperTridiagonalMatrix)::Tuple{Int64,Int64}
     return (length(M.diagonals[1]), length(M.diagonals[1]))
 end
 
-function Base.size(M::LowerTridiagonalMatrix)::Tuple{Int64,Int64}
+
+"""
+    size(M::LowerTridiagonalMatrix)::Tuple{Int64,Int64}
+
+Get size of matrix represented by lower tridiagonal matrix type.
+"""
+function size(M::LowerTridiagonalMatrix)::Tuple{Int64,Int64}
     return (length(M.diagonals[2]), length(M.diagonals[2]))
 end
 
@@ -127,53 +158,85 @@ end
 Convert type of values of matrix represented by tridiagonal matrix type.
 """
 function convert(::Type{TridiagonalMatrix{T}}, M::TridiagonalMatrix) where {T}
-    res = TridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
-    return res
-end
-
-function convert(::Type{UpperTridiagonalMatrix{T}}, M::UpperTridiagonalMatrix) where {T}
-    res = UpperTridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
-    return res
-end
-
-function convert(::Type{LowerTridiagonalMatrix{T}}, M::LowerTridiagonalMatrix) where {T}
-    res = LowerTridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, M.diagonals))
+    res = TridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, deepcopy(M.diagonals)))
     return res
 end
 
 
 """
-    Base.copy(M::Union{TridiagonalMatrix, UpperTridiagonalMatrix, LowerTridiagonalMatrix})
+    convert(::Type{UpperTridiagonalMatrix{T}}, M::UpperTridiagonalMatrix) where {T}
+
+Convert type of values of matrix represented by upper tridiagonal matrix type.
+"""
+function convert(::Type{UpperTridiagonalMatrix{T}}, M::UpperTridiagonalMatrix) where {T}
+    res = UpperTridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, deepcopy(M.diagonals)))
+    return res
+end
+
+
+"""
+    convert(::Type{LowerTridiagonalMatrix{T}}, M::LowerTridiagonalMatrix) where {T}
+
+Convert type of values of matrix represented by lower tridiagonal matrix type.
+"""
+function convert(::Type{LowerTridiagonalMatrix{T}}, M::LowerTridiagonalMatrix) where {T}
+    res = LowerTridiagonalMatrix{T}(convert(Array{Array{T, 1},1}, deepcopy(M.diagonals)))
+    return res
+end
+
+
+"""
+    copy(M::TridiagonalMatrix)
 
 Make a copy of a tridiagonal matrix type instance.
 """
-function Base.copy(M::Union{TridiagonalMatrix, UpperTridiagonalMatrix, LowerTridiagonalMatrix})
+function copy(M::TridiagonalMatrix)
     return typeof(M)(deepcopy(M.diagonals))
 end
 
 
 """
-    Base.getindex(M::TridiagonalMatrix, idx::Int)
+    copy(M::UpperTridiagonalMatrix)
+
+Make a copy of a tridiagonal matrix type instance.
+"""
+function copy(M::UpperTridiagonalMatrix)
+    return typeof(M)(deepcopy(M.diagonals))
+end
+
+
+"""
+    copy(M::LowerTridiagonalMatrix)
+
+Make a copy of a tridiagonal matrix type instance.
+"""
+function copy(M::LowerTridiagonalMatrix)
+    return typeof(M)(deepcopy(M.diagonals))
+end
+
+
+"""
+    getindex(M::TridiagonalMatrix, idx::Int)
 
 Perform linear indexing of matrix represented by tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
-julia> M = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
 4×4 TridiagonalMatrix{Int64}:
  4  4  0  0
  1  2  7  0
  0  4  3  6
  0  0  3  4
 
-julia> M[6]
+julia> td[6]
 2
 
-julia> M[3]
+julia> td[3]
 0
 ```
 """
-function Base.getindex(M::TridiagonalMatrix, idx::Int)
+function getindex(M::TridiagonalMatrix, idx::Int)
     
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[2])^2
@@ -196,7 +259,28 @@ function Base.getindex(M::TridiagonalMatrix, idx::Int)
 end
 
 
-function Base.getindex(M::UpperTridiagonalMatrix, idx::Int)
+"""
+    getindex(M::UpperTridiagonalMatrix, idx::Int)
+
+Perform linear indexing of matrix represented by upper tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+
+julia> utd[5]
+4
+
+julia> utd[7]
+0
+```
+"""
+function getindex(M::UpperTridiagonalMatrix, idx::Int)
     
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[1])^2
@@ -220,7 +304,28 @@ function Base.getindex(M::UpperTridiagonalMatrix, idx::Int)
 end
 
 
-function Base.getindex(M::LowerTridiagonalMatrix, idx::Int)
+"""
+    getindex(M::LowerTridiagonalMatrix, idx::Int)
+
+Perform linear indexing of matrix represented by lower tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+
+julia> ltd[6]
+7
+
+julia> ltd[8]
+0
+```
+"""
+function getindex(M::LowerTridiagonalMatrix, idx::Int)
     
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[2])^2
@@ -245,27 +350,27 @@ end
 
 
 """
-    Base.getindex(M::TridiagonalMatrix, idx::Vararg{Int, 2})
+    getindex(M::TridiagonalMatrix, idx::Vararg{Int, 2})
 
 Perform cartesian indexing of matrix represented by tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
-julia> M = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
 4×4 TridiagonalMatrix{Int64}:
  4  4  0  0
  1  2  7  0
  0  4  3  6
  0  0  3  4
 
-julia> M[2, 2]
+julia> td[2, 2]
 2
 
-julia> M[3, 1]
+julia> td[3, 1]
 0
 ```
 """
-function Base.getindex(M::TridiagonalMatrix, idx::Vararg{Int, 2})
+function getindex(M::TridiagonalMatrix, idx::Vararg{Int, 2})
     
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -289,7 +394,28 @@ function Base.getindex(M::TridiagonalMatrix, idx::Vararg{Int, 2})
 end
 
 
-function Base.getindex(M::UpperTridiagonalMatrix, idx::Vararg{Int, 2})
+"""
+    getindex(M::UpperTridiagonalMatrix, idx::Vararg{Int, 2})
+
+Perform cartesian indexing of matrix represented by upper tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+
+julia> utd[2, 3]
+7
+
+julia> utd[3, 2]
+0
+```
+"""
+function getindex(M::UpperTridiagonalMatrix, idx::Vararg{Int, 2})
     
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -313,7 +439,28 @@ function Base.getindex(M::UpperTridiagonalMatrix, idx::Vararg{Int, 2})
 end
 
 
-function Base.getindex(M::LowerTridiagonalMatrix, idx::Vararg{Int, 2})
+"""
+    getindex(M::LowerTridiagonalMatrix, idx::Vararg{Int, 2})
+
+Perform cartesian indexing of matrix represented by lower tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+
+julia> ltd[2, 1]
+4
+
+julia> ltd[1, 3]
+0
+```
+"""
+function getindex(M::LowerTridiagonalMatrix, idx::Vararg{Int, 2})
     
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -339,23 +486,23 @@ end
 
 
 """
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Int)
+    setindex!(M::TridiagonalMatrix, val, idx::Int)
 
 Set element at specified linear index in tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
-julia> M = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
 4×4 TridiagonalMatrix{Int64}:
  4  4  0  0
  1  2  7  0
  0  4  3  6
  0  0  3  4
 
-julia> M[7] = 11
+julia> td[7] = 11
 11
 
-julia> M
+julia> td
 4×4 TridiagonalMatrix{Int64}:
  4   4  0  0
  1   2  7  0
@@ -363,7 +510,7 @@ julia> M
  0   0  3  4
 ```
 """
-function Base.setindex!(M::TridiagonalMatrix, val, idx::Int)
+function setindex!(M::TridiagonalMatrix, val, idx::Int)
 
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[2])^2
@@ -392,15 +539,31 @@ end
 
 
 """
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Int)
+    setindex!(M::UpperTridiagonalMatrix, val, idx::Int)
 
-Set element at specified linear index in tridiagonal matrix type instance.
+Set element at specified linear index in upper tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+
+julia> utd[10] = -12
+-12
+
+julia> utd
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4    0  0
+ 0  2  -12  0
+ 0  0    3  6
+ 0  0    0  4
 ```
 """
-function Base.setindex!(M::UpperTridiagonalMatrix, val, idx::Int)
+function setindex!(M::UpperTridiagonalMatrix, val, idx::Int)
 
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[1])^2
@@ -426,15 +589,31 @@ end
 
 
 """
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Int)
+    setindex!(M::LowerTridiagonalMatrix, val, idx::Int)
 
-Set element at specified linear index in tridiagonal matrix type instance.
+Set element at specified linear index in lower tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+
+julia> ltd[7] = -3
+-3
+
+julia> ltd
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4   0  0  0
+ 4   7  0  0
+ 0  -3  6  0
+ 0   0  3  1
 ```
 """
-function Base.setindex!(M::LowerTridiagonalMatrix, val, idx::Int)
+function setindex!(M::LowerTridiagonalMatrix, val, idx::Int)
 
     # If linear index out of bounds, throw error.
     if idx > length(M.diagonals[2])^2
@@ -458,16 +637,33 @@ function Base.setindex!(M::LowerTridiagonalMatrix, val, idx::Int)
     end
 end
 
+
 """
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
+    setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
 
 Set element at specified cartesian index in tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+4×4 TridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 1  2  7  0
+ 0  4  3  6
+ 0  0  3  4
+
+julia> td[3, 2]= -3
+-3
+
+julia> td
+4×4 TridiagonalMatrix{Int64}:
+ 4   4  0  0
+ 1   2  7  0
+ 0  -3  3  6
+ 0   0  3  4
 ```
 """
-function Base.setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
+function setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
      
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -495,16 +691,33 @@ function Base.setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
     end
 end
 
-"""
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
 
-Set element at specified cartesian index in tridiagonal matrix type instance.
+"""
+    setindex!(M::UpperTridiagonalMatrix, val, idx::Vararg{Int, 2})
+
+Set element at specified cartesian index in upper tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+
+julia> utd[3, 4] = -5
+-5
+
+julia> utd
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0   0
+ 0  2  7   0
+ 0  0  3  -5
+ 0  0  0   4
 ```
 """
-function Base.setindex!(M::UpperTridiagonalMatrix, val, idx::Vararg{Int, 2})
+function setindex!(M::UpperTridiagonalMatrix, val, idx::Vararg{Int, 2})
      
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -529,16 +742,33 @@ function Base.setindex!(M::UpperTridiagonalMatrix, val, idx::Vararg{Int, 2})
 
 end
 
-"""
-    Base.setindex!(M::TridiagonalMatrix, val, idx::Vararg{Int, 2})
 
-Set element at specified cartesian index in tridiagonal matrix type instance.
+"""
+    setindex!(M::LowerTridiagonalMatrix, val, idx::Vararg{Int, 2})
+
+Set element at specified cartesian index in lower tridiagonal matrix type instance.
 
 # Examples
 ```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+
+julia> ltd[4, 3] = -2
+-2
+
+julia> ltd
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0   0  0
+ 4  7   0  0
+ 0  2   6  0
+ 0  0  -2  1
 ```
 """
-function Base.setindex!(M::LowerTridiagonalMatrix, val, idx::Vararg{Int, 2})
+function setindex!(M::LowerTridiagonalMatrix, val, idx::Vararg{Int, 2})
      
     # Build cartesian index.
     cart_idx = CartesianIndex(idx[1], idx[2])
@@ -565,25 +795,45 @@ end
 
 
 """
-    *(M::TridiagonalMatrix, v::Vector)
+    *(M::TridiagonalMatrix{T}, v::Vector{S})
     
 Perform multiplication of tridiagonal matrix type instance with vector.
 
 # Examples
 ```julia-repl
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [4, 2, 3, 4], [4, 7, 6]])
+4×4 TridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 1  2  7  0
+ 0  4  3  6
+ 0  0  3  4
 
+julia> v = [1, 2, 3, 2]
+4-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 2
+
+julia> td*v
+4-element Array{Float64,1}:
+ 12.0
+ 26.0
+ 29.0
+ 17.0
 ```
 """
-function *(M::TridiagonalMatrix, v::Vector)
+function *(M::TridiagonalMatrix{T}, v::Vector{S}) where {T, S}
     
     # Dimensions match test.
     if length(v) != length(M.diagonals[2])
         throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", size(M), length(v))))
     end
-
-    # Allocate vector for storing results.
-    type_M_param = typeof(M).parameters[1]
-    res = Vector{type_M_param in subtypes(Signed) ? Float64 : type_M_param}(undef, length(v))
+    
+    # Allocate vector of promoted type resulting from multiplication of value types
+    # in matrix and vector for storing results.
+    R = typeof(oneunit(T) * oneunit(S))
+    res = Vector{R}(undef, length(v))
     
     # Set start and end indices for computing the result elements only using explicitly stored elements.
     end_idx = 2
@@ -601,16 +851,46 @@ function *(M::TridiagonalMatrix, v::Vector)
 end
 
 
-function *(M::UpperTridiagonalMatrix, v::Vector)
+"""
+    *(M::UpperTridiagonalMatrix{T}, v::Vector{S})
+    
+Perform multiplication of upper tridiagonal matrix type instance with vector.
+
+# Examples
+```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[4, 2, 3, 4], [4, 7, 6]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 4  4  0  0
+ 0  2  7  0
+ 0  0  3  6
+ 0  0  0  4
+
+julia> v = [1, 2, 3, 2]
+4-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 2
+
+julia> utd*v
+4-element Array{Float64,1}:
+ 12.0
+ 25.0
+ 21.0
+  8.0
+```
+"""
+function *(M::UpperTridiagonalMatrix{T}, v::Vector{S}) where {T, S}
     
     # Dimensions match test.
     if length(v) != length(M.diagonals[1])
         throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", size(M), length(v))))
     end
 
-    # Allocate vector for storing results.
-    type_M_param = typeof(M).parameters[1]
-    res = Vector{type_M_param in subtypes(Signed) ? Float64 : type_M_param}(undef, length(v))
+    # Allocate vector of promoted type resulting from multiplication of value types
+    # in matrix and vector for storing results.
+    R = typeof(oneunit(T) * oneunit(S))
+    res = Vector{R}(undef, length(v))
     
     # Set start and end indices for computing the result elements only using explicitly stored elements.
     end_idx = 2
@@ -628,16 +908,46 @@ function *(M::UpperTridiagonalMatrix, v::Vector)
 end
 
 
-function *(M::LowerTridiagonalMatrix, v::Vector)
+"""
+    *(M::LowerTridiagonalMatrix{T}, v::Vector{S})
+    
+Perform multiplication of lower tridiagonal matrix type instance with vector.
+
+# Examples
+```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 1]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  1
+
+julia> v = [1, 2, 3, 2]
+4-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 2
+
+julia> ltd*v
+4-element Array{Float64,1}:
+  4.0
+ 18.0
+ 22.0
+ 11.0
+```
+"""
+function *(M::LowerTridiagonalMatrix{T}, v::Vector{S}) where {T, S}
     
     # Dimensions match test.
     if length(v) != length(M.diagonals[2])
         throw(DimensionMismatch(@sprintf("Matrix A has dimensions %s, vector B has length %d", size(M), length(v))))
     end
 
-    # Allocate vector for storing results.
-    type_M_param = typeof(M).parameters[1]
-    res = Vector{type_M_param in subtypes(Signed) ? Float64 : type_M_param}(undef, length(v))
+    # Allocate vector of promoted type resulting from multiplication of value types
+    # in matrix and vector for storing results.
+    R = typeof(oneunit(T) * oneunit(S))
+    res = Vector{R}(undef, length(v))
     
     # Set start and end indices for computing the result elements only using explicitly stored elements.
     end_idx = 1
@@ -645,7 +955,8 @@ function *(M::LowerTridiagonalMatrix, v::Vector)
 
     # Compute product by shifting indices over explicitly stored elements.
     for idx = 1:length(v)
-        res[idx] = dot(M[idx, max(start_idx, 1):min(end_idx, length(M.diagonals[2]))], v[max(start_idx, 1):min(end_idx, length(M.diagonals[2]))])
+        res[idx] = dot(M[idx, max(start_idx, 1):min(end_idx, length(M.diagonals[2]))], 
+                       v[max(start_idx, 1):min(end_idx, length(M.diagonals[2]))])
         start_idx += 1
         end_idx += 1
     end
@@ -655,8 +966,282 @@ function *(M::LowerTridiagonalMatrix, v::Vector)
 end
 
 
-function lu(M::TridiagonalMatrix)
+"""
+    lu(M::TridiagonalMatrix{T})
 
+Perform LU decomposition of tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> td = TridiagonalMatrix{Int64}([[1, 4, 3], [5, 4, 6, 4], [4, 2, 1]])
+4×4 TridiagonalMatrix{Int64}:
+ 5  4  0  0
+ 1  4  2  0
+ 0  4  6  1
+ 0  0  3  4
+
+julia> l, u = lu(td);
+
+julia> display(l)
+4×4 LowerTridiagonalMatrix{Float64}:
+ 1.0  0     0         0
+ 0.2  1.0   0         0
+ 0    1.25  1.0       0
+ 0    0     0.857143  1.0
+
+julia> display(u)
+4×4 UpperTridiagonalMatrix{Float64}:
+ 5.0  4.0  0    0
+ 0    3.2  2.0  0
+ 0    0    3.5  1.0
+ 0    0    0    3.14286
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 5.0  4.0  0.0  0.0
+ 1.0  4.0  2.0  0.0
+ 0.0  4.0  6.0  1.0
+ 0.0  0.0  3.0  4.0
+```
+"""
+function lu(M::TridiagonalMatrix{T}) where T
+    
+    # Initialize matrix on which to perform elimination.
+    # Convert to promoted type resulting from division and multiplication.
+    S = typeof(oneunit(T) * (oneunit(T) / oneunit(T)))
+    M_el = convert(TridiagonalMatrix{S}, M)
+
+    # Eliminate elements in column below main diagonal. Build elimination matrix in-place.
+    for idx = 1:length(M_el.diagonals[2])-1
+        if M_el[idx+1, idx] != zero(T)
+            if M_el[idx, idx] == zero(T)
+                throw(SingularException(idx))
+            end
+            mult = -M_el[idx+1, idx]/M_el[idx, idx]
+            M_el[idx+1, idx:idx+1] += mult*M_el[idx, idx:idx+1]
+            M_el[idx+1, idx] = -mult
+        end
+    end
+
+    # Initialize lower and upper tridiagonal matrix type instances as results of decomposition and return.
+    l = LowerTridiagonalMatrix{S}(vcat([M_el.diagonals[1]], [ones(length(M.diagonals[2]))]))
+    u = UpperTridiagonalMatrix{S}(M_el.diagonals[2:end])
+    return l, u
+end
+
+
+"""
+    lu(M::UpperTridiagonalMatrix{T})
+
+Perform LU decomposition of upper tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> utd = UpperTridiagonalMatrix{Int64}([[5, 7, 6, 5], [4, 6, 4]])
+4×4 UpperTridiagonalMatrix{Int64}:
+ 5  4  0  0
+ 0  7  6  0
+ 0  0  6  4
+ 0  0  0  5
+
+julia> l, u = lu(utd);
+
+julia> display(l)
+4×4 LowerTridiagonalMatrix{Float64}:
+ 1.0  0    0    0  
+ 0.0  1.0  0    0  
+ 0    0.0  1.0  0  
+ 0    0    0.0  1.0
+
+julia> display(u)
+4×4 UpperTridiagonalMatrix{Float64}:
+ 5.0  4.0  0    0  
+ 0    7.0  6.0  0  
+ 0    0    6.0  4.0
+ 0    0    0    5.0
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 5.0  4.0  0.0  0.0
+ 0.0  7.0  6.0  0.0
+ 0.0  0.0  6.0  4.0
+ 0.0  0.0  0.0  5.0
+```
+"""
+function lu(M::UpperTridiagonalMatrix{T}) where T
+    
+    # Initialize matrix on which to perform elimination.
+    # Convert to promoted type resulting from division and multiplication.
+    S = typeof(oneunit(T) * (oneunit(T) / oneunit(T)))
+    M_el = convert(UpperTridiagonalMatrix{S}, M)
+    
+    # Initialize lower and upper tridiagonal matrix type instances as results of decomposition and return.
+    l = LowerTridiagonalMatrix{S}(vcat([zeros(length(M_el.diagonals[1])-1)], [ones(length(M_el.diagonals[1]))]))
+    u = UpperTridiagonalMatrix{S}(M_el.diagonals)
+    return l, u
+end
+
+
+"""
+    lu(M::LowerTridiagonalMatrix{T})
+
+Perform LU decomposition of lower tridiagonal matrix type instance.
+
+# Examples
+```julia-repl
+julia> ltd = LowerTridiagonalMatrix{Int64}([[4, 2, 3], [4, 7, 6, 5]])
+4×4 LowerTridiagonalMatrix{Int64}:
+ 4  0  0  0
+ 4  7  0  0
+ 0  2  6  0
+ 0  0  3  5
+
+julia> l, u = lu(utd);
+
+julia> display(l)
+4×4 LowerTridiagonalMatrix{Float64}:
+ 1.0  0    0    0  
+ 0.0  1.0  0    0  
+ 0    0.0  1.0  0  
+ 0    0    0.0  1.0
+
+julia> display(u)
+4×4 UpperTridiagonalMatrix{Float64}:
+ 5.0  4.0  0    0  
+ 0    7.0  6.0  0  
+ 0    0    6.0  4.0
+ 0    0    0    5.0
+
+julia> display(l*u)
+4×4 Array{Float64,2}:
+ 5.0  4.0  0.0  0.0
+ 0.0  7.0  6.0  0.0
+ 0.0  0.0  6.0  4.0
+ 0.0  0.0  0.0  5.0
+```
+"""
+function lu(M::LowerTridiagonalMatrix{T}) where T
+    
+    # Initialize matrix on which to perform elimination.
+    # Convert to promoted type resulting from division and multiplication.
+    S = typeof(oneunit(T) * (oneunit(T) / oneunit(T)))
+    M_el = convert(LowerTridiagonalMatrix{S}, M)
+    
+    # Eliminate elements in column below main diagonal. Build elimination matrix in-place.
+    for idx = 1:length(M_el.diagonals[2])-1
+        if M_el[idx, idx] == zero(T)
+            throw(SingularException(idx))
+        end
+        mult = -M_el[idx+1, idx]/M_el[idx, idx]
+        M_el[idx+1, idx] += mult*M_el[idx, idx]
+        M_el[idx+1, idx] = -mult
+    end
+
+    # Initialize lower and upper tridiagonal matrix type instances as results of decomposition and return.
+    l = LowerTridiagonalMatrix{S}(vcat([M_el.diagonals[1]], [ones(length(M.diagonals[2]))]))
+    u = UpperTridiagonalMatrix{S}([M_el.diagonals[2], zeros(length(M.diagonals[2])-1)])
+    return l, u
+end
+
+
+"""
+    \(M::TridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+
+Solve systems of linear equations Ax = B for x where A is a tridiagonal matrix.
+"""
+function \(M::TridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+    
+    # Dimensions match test.
+    if length(b) != length(M.diagonals[2])
+        throw(DimensionMismatch(@sprintf("B has leading dimension %d, but needs %d", length(b), length(M.diagonals[2]))))
+    end
+    
+    # Perform LU decomposition.
+    l, u = lu(M)
+    
+    ### Solve Ly = b for y. ###
+
+    # Initialize y vector of promoted type resulting from performed operations 
+    # with value types in matrix and vector b.
+    R = typeof((oneunit(S) - oneunit(T) * oneunit(S)) / oneunit(T))
+    y = convert(Vector{R}, copy(b))
+
+    # Perform forward substitions to compute y vector.
+    y[1] = y[1]/l[1, 1]
+    for idx = 2:length(y)
+        y[idx] = (y[idx] - l[idx, idx-1]*y[idx-1])/l[idx, idx]
+    end
+
+    ### Solve Ux = y for x. ###
+    
+    # Initialize x vector.
+    x = copy(y)
+
+    # Perform backward substitions to compute x vector.
+    x[end] = x[end]/u[end, end]
+    for idx = length(x)-1:-1:1
+        x[idx] = (x[idx] - u[idx, idx+1]*x[idx+1])/u[idx, idx]
+    end
+
+    # Return solution.
+    return x
+end
+
+
+"""
+    \(M::UpperTridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+
+Solve systems of linear equations Ax = B for x where A is an upper tridiagonal matrix.
+"""
+function \(M::UpperTridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+    
+    # Dimensions match test.
+    if length(b) != length(M.diagonals[1])
+        throw(DimensionMismatch(@sprintf("B has leading dimension %d, but needs %d", length(b), length(M.diagonals[2]))))
+    end
+    
+   
+    # Initialize x vector of promoted type resulting from performed operations 
+    # with value types in matrix and vector b.
+    R = typeof((oneunit(S) - oneunit(T) * oneunit(S)) / oneunit(T))
+    x = convert(Vector{R}, copy(b))
+
+    # Perform backward substitions to compute x vector.
+    x[end] = x[end]/M[end, end]
+    for idx = length(x)-1:-1:1
+        x[idx] = (x[idx] - M[idx, idx+1]*x[idx+1])/M[idx, idx]
+    end
+
+    # Return solution.
+    return x
+end
+
+
+"""
+    \(M::LowerTridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+
+Solve systems of linear equations Ax = B for x where A is a lower tridiagonal matrix.
+"""
+function \(M::LowerTridiagonalMatrix{T}, b::Vector{S}) where {T, S}
+    
+    # Dimensions match test.
+    if length(b) != length(M.diagonals[2])
+        throw(DimensionMismatch(@sprintf("B has leading dimension %d, but needs %d", length(b), length(M.diagonals[2]))))
+    end
+    
+    # Initialize x vector of promoted type resulting from performed operations 
+    # with value types in matrix and vector b.
+    R = typeof((oneunit(S) - oneunit(T) * oneunit(S)) / oneunit(T))
+    x = convert(Vector{R}, copy(b))
+
+    # Perform forward substitions to compute x vector.
+    x[1] = x[1]/M[1, 1]
+    for idx = 2:length(x)
+        x[idx] = (x[idx] - M[idx, idx-1]*x[idx-1])/M[idx, idx]
+    end
+
+    # Return solution.
+    return x
 end
 
 end
