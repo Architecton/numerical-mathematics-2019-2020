@@ -158,6 +158,7 @@ end
 
 
 ### TEST SETS ###
+MAX_DIM = 20
 
 @testset "Generating random tridiagonal matrices (test for tests)" begin
 
@@ -258,7 +259,7 @@ end
 @testset "Matrix initializations" begin
 
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -267,7 +268,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -276,7 +277,7 @@ end
     end
     
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -288,7 +289,7 @@ end
 @testset "Matrix size" begin
 
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -297,7 +298,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -306,7 +307,7 @@ end
     end
     
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -318,7 +319,7 @@ end
 @testset "Linear getindex" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -329,7 +330,7 @@ end
     end
    
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -340,7 +341,7 @@ end
     end
     
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -354,7 +355,7 @@ end
 @testset "Cartesian getindex" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -367,7 +368,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -380,7 +381,7 @@ end
     end
 
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -396,7 +397,7 @@ end
 @testset "Linear setindex" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -415,7 +416,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -434,7 +435,7 @@ end
     end
     
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -456,7 +457,7 @@ end
 @testset "Cartesian setindex" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -476,7 +477,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -496,7 +497,7 @@ end
     end
 
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -519,7 +520,7 @@ end
 @testset "Matrix vector multiplication" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -529,7 +530,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -539,7 +540,7 @@ end
     end
     
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -553,7 +554,7 @@ end
 @testset "LU decomposition" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -565,7 +566,7 @@ end
     end
    
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -577,7 +578,7 @@ end
     end
 
     @testset "Lower tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -592,7 +593,7 @@ end
 @testset "Backslash operator" begin
     
     @testset "Center tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "center")
             diags = extract_tridiagonal_band(mat, "center")
             tdm = TridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -602,7 +603,7 @@ end
     end
     
     @testset "Upper tridiagonal matrices" begin
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "upper")
             diags = extract_tridiagonal_band(mat, "upper")
             utdm = UpperTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
@@ -612,13 +613,63 @@ end
     end
 
     @testset "Lower tridiagonal matrices" begin 
-        for dim = 2:10
+        for dim = 2:MAX_DIM
             mat = random_tridiagonal_matrix(dim, "lower")
             diags = extract_tridiagonal_band(mat, "lower")
             ltdm = LowerTridiagonalMatrix{typeof(mat).parameters[1]}(diags)
             v = rand(dim)
             @test ltdm\v ≈ Matrix(ltdm)\v atol=1.0e-4
         end
+    end
+end
+
+@testset "tridiagonalization" begin
+    for dim = 2:MAX_DIM
+        M = rand(dim, dim)
+        M +=  M'
+        trid, Q = tridiag(M)
+        @test Q'*Matrix(trid)*Q ≈ M atol=1.0e-4
+    end
+end
+
+@testset "shifted inverse power method" begin
+    for dim = 2:MAX_DIM
+
+        # Initialize random real symmetric matrix.
+        M = rand(dim, dim)*5.0
+        M += M'
+
+        # Get reference eigenvalues.
+        evs = Set(eigvals(M))
+
+        # Initialize set for storing found eigenvalues.
+        found_evs = Set()
+
+        # Sweep over vicinity of known reference eigenvalues
+        for e = minimum(evs)-1:0.1:maximum(evs)
+
+            # Perform shifted inverse power method to get estimate of
+            # eigenvalue closest to initial guess e.
+            e_found, _ = inv_eigen(M, e)
+
+            # Add found eigenvalue to set.
+            if !isnothing(e_found)
+                push!(found_evs, round(e_found, digits=4))
+            end
+        end
+
+        # Check if all eigenvalues found.
+        found = false
+        for el1 in found_evs
+            for el2 in evs
+                if abs(el1 - el2) < 1.0e-1
+                   found = true  
+                   break
+               end  
+            end
+            @test found
+        end
+
     end
 end
 
