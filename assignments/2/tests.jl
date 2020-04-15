@@ -650,23 +650,30 @@ end
 
             # Perform shifted inverse power method to get estimate of
             # eigenvalue closest to initial guess e.
-            e_found, _ = inv_eigen(M, e)
+            e_found, evec_found = inv_eigen(M, e)
+
+            # @test M*evec_found ≈ e_found*evec_found atol=1.0e-1
 
             # Add found eigenvalue to set.
             if !isnothing(e_found)
-                push!(found_evs, round(e_found, digits=4))
+                push!(found_evs, (round(e_found, digits=4), evec_found))
             end
         end
 
         # Check if all eigenvalues found.
         found = false
-        for el1 in found_evs
-            for el2 in evs
-                if abs(el1 - el2) < 1.0e-1
-                   found = true  
+        for el1 in evs
+            for el2 in found_evs
+                if abs(el1 - el2[1]) < 1.0e-1
+                   found = true
+
+                   # Test if eigenvector correct.
+                   @test M*el2[2] ≈ el1[1]*el2[2] atol=1.0e-1
                    break
                end  
             end
+            
+            # Test if eigenvalue found by shifted inverse power method.
             @test found
         end
 

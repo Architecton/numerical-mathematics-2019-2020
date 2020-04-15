@@ -1403,6 +1403,11 @@ julia> display(Q)
 ```
 """
 function tridiag(M::Array{T,2}) where T
+    
+    # Check if matrix symmetric.
+    if M != M'
+        throw(DomainError(M, "matrix must be symmetric"))
+    end
 
     # Create copy of matrix.
     M_nxt = copy(M)
@@ -1489,8 +1494,13 @@ julia> eigvals(M)
 """
 function inv_eigen(M::Array{T, 2}, eig_approx, thresh_conv=1.0e-4, max_it=1000) where T
     
+    # Check if matrix symmetric.
+    if M != M'
+        throw(DomainError(M, "matrix must be symmetric"))
+    end
+    
     # Get tridiagonal matrix similar to M.
-    td, _ = tridiag(M)
+    td, Q = tridiag(M)
 
     # Shift matrix.
     td.diagonals[2] .-= eig_approx
@@ -1531,7 +1541,7 @@ function inv_eigen(M::Array{T, 2}, eig_approx, thresh_conv=1.0e-4, max_it=1000) 
 
         # If change in eigenvector estimation small enough,
         # declare convergence.
-        if norm(x_nxt - x_prev) < thresh_conv
+        if norm(x_nxt - x_prev) < thresh_conv || it_count == max_it
             conv_flag = true
             eigval_est = 1/eig_inv_approx + eig_approx
             eigvec_est = x_nxt
@@ -1542,7 +1552,7 @@ function inv_eigen(M::Array{T, 2}, eig_approx, thresh_conv=1.0e-4, max_it=1000) 
 
     # Return estimate of eigenvector of similar tridiagonal matrix and
     # estimated eigenvalue closest to provided estimate.
-    return eigval_est, eigvec_est
+    return eigval_est, Q'*eigvec_est
 end
 
 end
